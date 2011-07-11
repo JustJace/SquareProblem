@@ -222,6 +222,7 @@ def solve square
 	if full? square
 		if sum < $SUMTHRESHOLD
 			$SUMTHRESHOLD = sum
+			$THRESHOLD = 3 * sum / $N**2
 			$solutions.push square
 			display square
 		end
