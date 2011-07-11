@@ -1,9 +1,20 @@
 # RUBY SQUARE PROBLEM
 
-$N = 5
+$N = 3
 $THRESHOLD = -1
 $SUMTHRESHOLD = -1
 $solutions = []
+
+# DISPLAY
+
+def display solution
+
+	for row in solution
+		print row
+		puts
+	end
+	puts "SUM = #{sum solution}"
+end
 
 # SQUARE
 
@@ -36,11 +47,7 @@ end
 
 def full? square
 
-	for i in square.flatten
-		return false if i == 0
-	end
-
-	return true
+	return !(square.flatten.include? 0)
 end
 
 
@@ -165,6 +172,8 @@ end
 
 # MAIN
 
+$N = ARGV[0].to_i if ARGV[0] != nil
+
 i = 1
 
 while $solutions.length == 0
@@ -174,4 +183,4 @@ while $solutions.length == 0
 	i += 1
 end
 
-print minimum_sum
+display minimum_sum
