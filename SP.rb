@@ -171,15 +171,6 @@ def valid_next? square, x, y, i
 	return true
 end
 
-def remove_dups valid, square
-
-	for i in square.flatten
-		valid.delete i
-	end
-
-	return valid
-end
-
 def valid_list square
 
 	valid = []
@@ -191,7 +182,11 @@ def valid_list square
 		end
 	end
 
-	return remove_dups valid, square
+	for i in square.flatten
+		valid.delete i
+	end
+
+	return valid
 end
 
 def sum_of square
@@ -204,7 +199,7 @@ def heuristic_trim? square, sum
 	n = $N**2 - (square.flatten.count 0)
 	d = $N**2
 
-	if sum * 1.1> ((n.to_f / d.to_f) * $SUMTHRESHOLD)
+	if sum * 1.2 > ((n.to_f / d.to_f) * $SUMTHRESHOLD)
 		#puts "#{sum} > #{(n.to_f / d.to_f) * $SUMTHRESHOLD}"
 		return true
 	end
@@ -230,7 +225,6 @@ def solve square
 	return if heuristic_trim? square, sum
 
 	for i in valid_list square
-		next if heuristic_skip? square, i
 		solve place_next(square, i)
 	end
 end
@@ -268,7 +262,7 @@ if ARGV[1] == '-h'
 	end
 end
 
-i = 1
+i = 2 * $N
 
 while $solution == nil && i < $MAXDEPTH * $N
 	$THRESHOLD = 2**i
