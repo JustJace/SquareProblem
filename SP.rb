@@ -98,7 +98,7 @@ def valid_list square
 	valid = []
 	x, y = next_spot_in square
 
-	if $H && x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1])
+	if $H && (x % 2 == 0 && y == 0) || (x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1]))
 		vals = $LATTICE
 	else
 		vals = 2..$THRESHOLD
@@ -130,7 +130,6 @@ def solve square
 	if full? square
 		if sum < $SUMTHRESHOLD
 			$SUMTHRESHOLD = sum
-			$THRESHOLD = 3 * sum / $N**2
 			$SOLUTION = square
 			display square
 		end
