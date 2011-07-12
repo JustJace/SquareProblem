@@ -4,10 +4,7 @@
 
 def display solution
 
-	for row in solution
-		print row
-		puts
-	end
+	solution.each {|row| print row, "\n"}
 	puts "SUM = #{sum_of solution}"
 end
 
@@ -16,6 +13,7 @@ end
 def new_square
 
 	square = []
+
 	for i in 0...$N
 		row = []
 		for j in 0...$N
@@ -30,11 +28,7 @@ end
 def dup_square square
 
 	dupSquare = []
-
-	for row in square
-		dupSquare.push row.dup
-	end
-
+	square.each {|row| dupSquare.push row.dup}
 	return dupSquare
 end
 
@@ -104,16 +98,15 @@ def valid_list square
 	valid = []
 	x, y = next_spot_in square
 
-	for i in 2..$THRESHOLD
-		if valid_next? square, x, y, i
-			valid.push i
-		end
+	if $H && x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1])
+		vals = $LATTICE
+	else
+		vals = 2..$THRESHOLD
 	end
 
-	for i in square.flatten
-		valid.delete i
-	end
 
+	vals.each {|i| valid.push i if valid_next? square, x, y, i}
+	square.flatten.each {|i| valid.delete i}
 	return valid
 end
 
@@ -146,17 +139,21 @@ def solve square
 
 	return if sum > $SUMTHRESHOLD
 	return if heuristic_trim? square, sum
-
-	for i in valid_list square
-		solve place_next(square, i)
-	end
+	valid_list(square).each {|num| solve place_next(square, num)}
 end
 
 
 
 # MAIN
 $N = ARGV[0].to_i
+$N = 3 if ARGV[0] == nil
+$H = if ARGV[1] == '-h'
+		true
+	else
+		false
+	end
 $THRESHOLD = 2**($N + 3)
 $SUMTHRESHOLD = $THRESHOLD * $N**2 / 2
 $SOLUTION = nil
+$LATTICE = 2..($N**2+2)
 solve new_square
