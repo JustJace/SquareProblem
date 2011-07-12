@@ -1,11 +1,5 @@
 # RUBY SQUARE PROBLEM
 
-$N = 3
-$THRESHOLD = -1
-$SUMTHRESHOLD = -1
-$MAXDEPTH = 3
-$solution
-
 # DISPLAY
 
 def display solution
@@ -18,70 +12,6 @@ def display solution
 end
 
 # SQUARE
-
-def valid_diagonals? square
-
-	for y in 0...$N
-		for x in 0...$N
-			next if square[y][x] == 0
-			#if x > 0 && y > 0
-			#       return false if divide_equally? square[x][y], square[x-1][y-1]
-			#end
-			if x > 0 && y < $N - 1
-				return false if divide_equally? square[y][x], square[y+1][x-1]
-			end
-			#if x < $N - 1 && y > 0
-			#       return false if divide_equally? square[x][y], square[x+1][y-1]
-			#end
-			if x < $N - 1 && y < $N - 1
-				return false if divide_equally? square[y][x], square[y+1][x+1]
-			end
-		end
-	end
-
-   return true
-end
-
-def heuristic_squares
-
-	configurations = []
-	nums = []
-	for i in 2..(1 + $N**2 / 2)
-		nums.push i
-	end
-
-	for permute in nums.permutation
-		square = new_square
-		if valid_diagonals? (create_lattice square, permute)
-			configurations.push square
-		end
-	end
-
-	return configurations
-end
-
-def create_lattice square, permute
-
-	i = 0
-	j = 0
-	for y in 0...$N
-		for x in 0...$N
-			if i % 2 == 0
-				i += 1
-				next
-			end
-
-			i += 1
-			square[y][x] = permute[ j ]			
-			j += 1		
-		end
-		if $N % 2 == 0
-			i += 1
-		end
-	end
-	return square
-
-end
 
 def new_square
 
@@ -111,10 +41,8 @@ end
 # SOLVE
 
 def full? square
-
 	return !(square.flatten.include? 0)
 end
-
 
 def next_spot_in square
 
@@ -133,9 +61,9 @@ def place_next square, i
 	return dupSquare
 end
 
-def divide_equally? i, j
+def divide_equally? a,b
 
-	return i % j == 0 || j % i == 0
+	return a % b == 0 || b % a == 0
 end
 
 def valid_next? square, x, y, i
@@ -144,15 +72,15 @@ def valid_next? square, x, y, i
 	if x > 0 && square[y][x-1] != 0
 		return false if !divide_equally? square[y][x-1], i
 	end
-	if x < $N - 1 && square[y][x+1] != 0
-		return false if !divide_equally? square[y][x+1], i
-	end
+	#if x < $N - 1 && square[y][x+1] != 0
+	#	return false if !divide_equally? square[y][x+1], i
+	#end
 	if y > 0 && square[y-1][x] != 0
 		return false if !divide_equally? square[y-1][x], i
 	end
-	if y < $N - 1 && square[y+1][x] != 0
-		return false if !divide_equally? square[y+1][x], i
-	end
+	#if y < $N - 1 && square[y+1][x] != 0
+	#	return false if !divide_equally? square[y+1][x], i
+	#end
 
 	# Check Diagonals
 	if x > 0 && y > 0 && square[y-1][x-1] != 0
@@ -190,7 +118,6 @@ def valid_list square
 end
 
 def sum_of square
-
 	return square.flatten.inject {|sum, n| sum + n}
 end
 
@@ -199,11 +126,7 @@ def heuristic_trim? square, sum
 	n = $N**2 - (square.flatten.count 0)
 	d = $N**2
 
-	if sum * 1.2 > ((n.to_f / d.to_f) * $SUMTHRESHOLD)
-		#puts "#{sum} > #{(n.to_f / d.to_f) * $SUMTHRESHOLD}"
-		return true
-	end
-
+	return true if sum > ((n.to_f / d.to_f) * $SUMTHRESHOLD)
 	return false
 end
 
@@ -215,7 +138,7 @@ def solve square
 		if sum < $SUMTHRESHOLD
 			$SUMTHRESHOLD = sum
 			$THRESHOLD = 3 * sum / $N**2
-			$solution = square
+			$SOLUTION = square
 			display square
 		end
 		return
@@ -230,45 +153,10 @@ def solve square
 end
 
 
+
 # MAIN
-
-$N = ARGV[0].to_i if ARGV[0] != nil
-
-if ARGV[1] == '-h'
-
-	$THRESHOLD = $N**3 * 2.5
-	$SUMTHRESHOLD = $THRESHOLD * ($N**2 / 2)
-
-
-	nums = []
-	for i in 2..(1 + $N**2 / 2)
-		nums.push i
-	end
-	for permute in nums.permutation
-		square = new_square
-		if valid_diagonals? (create_lattice square, permute)
-			solve square
-		end
-	end
-
-	# hSquares = heuristic_squares
-	# puts "Heuristic Configurations: #{hSquares.length}"
-	# for configuration in hSquares
-	# 	solve configuration
-	# end
-
-	if $solution == nil
-		puts "Could not find solution by heuristic lattice."
-	end
-end
-
-i = 2 * $N
-
-while $solution == nil && i < $MAXDEPTH * $N
-	$THRESHOLD = 2**i
-	$SUMTHRESHOLD = $THRESHOLD * ($N**2 / 2)
-	solve new_square
-	i += 1
-end
-
-display $solution
+$N = ARGV[0].to_i
+$THRESHOLD = 2**($N + 3)
+$SUMTHRESHOLD = $THRESHOLD * $N**2 / 2
+$SOLUTION = nil
+solve new_square
