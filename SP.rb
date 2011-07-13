@@ -57,6 +57,7 @@ end
 
 def divide_equally? a,b
 
+	return false if a == 0 || b == 0
 	return a % b == 0 || b % a == 0
 end
 
@@ -64,13 +65,13 @@ def valid_next? square, x, y, i
 
 	# Check Orthogonals
 	if x > 0 && square[y][x-1] != 0
-		return false if !divide_equally? square[y][x-1], i
+		return false if $LOOKUP[square[y][x-1]][i] == 0
 	end
 	#if x < $N - 1 && square[y][x+1] != 0
 	#	return false if !divide_equally? square[y][x+1], i
 	#end
 	if y > 0 && square[y-1][x] != 0
-		return false if !divide_equally? square[y-1][x], i
+		return false if $LOOKUP[square[y-1][x]][i] == 0
 	end
 	#if y < $N - 1 && square[y+1][x] != 0
 	#	return false if !divide_equally? square[y+1][x], i
@@ -78,13 +79,13 @@ def valid_next? square, x, y, i
 
 	# Check Diagonals
 	if x > 0 && y > 0 && square[y-1][x-1] != 0
-		return false if divide_equally? square[y-1][x-1], i
+		return false if $LOOKUP[square[y-1][x-1]][i] == 1
 	end
 	# if x > 0 && y < $N - 1 && square[x-1][y+1] != 0
 	# 	return false if divide_equally? square[x-1][y+1], i
 	# end
 	if x < $N - 1 && y > 0 && square[y-1][x+1] != 0
-		return false if divide_equally? square[y-1][x+1], i
+		return false if $LOOKUP[square[y-1][x+1]][i] == 1
 	end
 	# if x < $N - 1 && y < $N - 1 && square[x+1][y+1] != 0
 	# 	return false if divide_equally? square[x+1][y+1], i
@@ -98,7 +99,7 @@ def valid_list square
 	valid = []
 	x, y = next_spot_in square
 
-	if $H && (x % 2 == 0 && y == 0) || (x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1]))
+	if $H && (x % 2 == 1 && y == 0) || (x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1]))
 		vals = $LATTICE
 	else
 		vals = 2..$THRESHOLD
@@ -141,7 +142,25 @@ def solve square
 	valid_list(square).each {|num| solve place_next(square, num)}
 end
 
+def look_up_table max
 
+	table = []
+
+	for y in 0..max
+		row = []
+		for x in 0..max
+			row[x] = if divide_equally? x,y
+						1
+					else
+						0
+					end
+		end
+
+		table.push row
+	end
+
+	return table
+end
 
 # MAIN
 $N = ARGV[0].to_i
@@ -155,4 +174,5 @@ $THRESHOLD = 2**($N + 3)
 $SUMTHRESHOLD = $THRESHOLD * $N**2 / 2
 $SOLUTION = nil
 $LATTICE = 2..($N**2+2)
+$LOOKUP = look_up_table $THRESHOLD
 solve new_square
