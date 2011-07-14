@@ -1,191 +1,147 @@
-# RUBY SQUARE PROBLEM
+# RUBY SQUARE PROBLEM #
 
-# DISPLAY
-
-def display solution
-
-	solution.each {|row| print row, "\n"}
-	puts "SUM = #{sum_of solution}"
-end
-
-# SQUARE
-
-def new_square
-
-	square = []
-
-	for i in 0...$N
-		row = []
-		for j in 0...$N
-			row.push 0
-		end
-		square.push row
-	end
-
-	return square
-end
-
-def dup_square square
-
-	dupSquare = []
-	square.each {|row| dupSquare.push row.dup}
-	return dupSquare
-end
-
-# SOLVE
-
-def full? square
-	return !(square.flatten.include? 0)
-end
-
-def next_spot_in square
-
+#############################################################
+def display square
 	for y in 0...$N
 		for x in 0...$N
-			return x,y if square[y][x] == 0
+			print "#{square[y*$N + x]} "
 		end
+		puts
 	end
+	puts "SUM: #{sum_of square} TIME: #{Time.now - $ST}"
 end
-
-def place_next square, i
-
-	dupSquare = dup_square square
-	x,y = next_spot_in square
-	dupSquare[y][x] = i 
-	return dupSquare
-end
-
-def divide_equally? a,b
-
+#############################################################
+def divide_equally? a, b
 	return false if a == 0 || b == 0
 	return a % b == 0 || b % a == 0
 end
-
-def valid_next? square, x, y, i
-
-	# Check Orthogonals
-	if x > 0 && square[y][x-1] != 0
-		return false if !$DIVEQUAL[square[y][x-1]][i]
+#############################################################
+def create_div_table
+	table = []
+	for y in 0...$MAXNUM
+		row = []
+		for x in 0...$MAXNUM
+			row.push divide_equally? x,y
+		end
+		table.push row
 	end
-	#if x < $N - 1 && square[y][x+1] != 0
-	#	return false if !divide_equally? square[y][x+1], i
-	#end
-	if y > 0 && square[y-1][x] != 0
-		return false if !$DIVEQUAL[square[y-1][x]][i]
+	return table
+end
+#############################################################
+def full? square
+	return !(square.include? 0)
+end
+#############################################################
+def sum_of square
+	return square.inject {|sum, n| sum + n}
+end
+#############################################################
+def next_spot_in square
+	return square.index 0
+end
+#############################################################
+def place num, square
+	x = next_spot_in square
+	copy = square.dup
+	copy[x] = num
+	return copy
+end
+#############################################################
+def valid_num? square, num, x
+	#LEFT
+	if x % $N > 0 && square[x-1] != 0
+		return false if !$DIVEQL[square[x-1]][num]
 	end
-	#if y < $N - 1 && square[y+1][x] != 0
-	#	return false if !divide_equally? square[y+1][x], i
-	#end
-
-	# Check Diagonals
-	if x > 0 && y > 0 && square[y-1][x-1] != 0
-		return false if $DIVEQUAL[square[y-1][x-1]][i]
+	#UPLEFT
+	if x % $N > 0 && x / $N > 0 && square[x-$N-1] != 0
+		return false if $DIVEQL[square[x-$N-1]][num]
 	end
-	# if x > 0 && y < $N - 1 && square[x-1][y+1] != 0
-	# 	return false if divide_equally? square[x-1][y+1], i
+	#UP
+	if x / $N > 0 && square[x-$N] != 0
+		return false if !$DIVEQL[square[x-$N]][num]
+	end
+	#UPRIGHT
+	if x % $N < $N-1 && x / $N > 0 && square[x-$N+1] != 0
+		return false if $DIVEQL[square[x-$N+1]][num]
+	end
+	# #RIGHT
+	# if x % $N < $N-1 && square[x+1] != 0
+	# 	return false if !$DIVEQL[square[x+1]][num]
 	# end
-	if x < $N - 1 && y > 0 && square[y-1][x+1] != 0
-		return false if $DIVEQUAL[square[y-1][x+1]][i]
-	end
-	# if x < $N - 1 && y < $N - 1 && square[x+1][y+1] != 0
-	# 	return false if divide_equally? square[x+1][y+1], i
+	# #DOWNRIGHT
+	# if x / $N < $N-1 && x % $N < $N-1 && square[x+$N+1] != 0
+	# 	return false if $DIVEQL[square[x+$N+1]][num]
 	# end
-
+	# #DOWN
+	# if x / $N < $N-1 && square[x+$N] != 0
+	# 	return false if !$DIVEQL[square[x+$N]][num]
+	# end
+	# #DOWNLEFT
+	# if x % $N > 0 && x / $N < $N-1 && square[x+$N-1] != 0
+	# 	return false if $DIVEQL[square[x+$N-1]][num]
+	# end
 	return true
 end
-
-def valid_list square
-
+#############################################################
+def valid_nums_in square
+	x = next_spot_in square
 	valid = []
-	x, y = next_spot_in square
-
-	if $H && (x % 2 == 0 && y == 0) || (x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1]))
-		vals = $LATTICE
-	else
-		vals = 2..$THRESHOLD
-	end
-
-	vals.each {|i| valid.push i if valid_next? square, x, y, i}
-	square.flatten.each {|i| valid.delete i}
+	vals = if (x % 2 == 0 && x / $N == 0) || (x % $N > 0 && x / $N > 0 && ($LOSET.include? square[x-$N-1]))
+			$LOSET
+		  else
+		  	$HISET
+		  end
+	vals.each { |n| valid.push n if valid_num? square, n, x}
+	square.each { |s| valid.delete s }
 	return valid
 end
-
-def sum_of square
-	return square.flatten.inject {|sum, n| sum + n}
-end
-
+#############################################################
 def current_sum_trim? square, sum
-
-	n = $N**2 - (square.flatten.count 0)
+	n = $N**2 - (square.count 0)
 	d = $N**2
 
-	return true if sum > ((n.to_f / d.to_f) * $SUMTHRESHOLD)
+	return true if sum > ((n.to_f / d.to_f) * $MINSUM)
 	return false
 end
-
-def corner_trim? square
-
-	if square[0][0] != 0
-		if square[0][$N-1] != 0
-			return true if square[0][0] > square[0][$N-1]
-		end
-		if square[$N-1][0] != 0
-			return true if square[0][$N-1] > square[$N-1][0]
-		end
-		if square[$N-1][$N-1] != 0
-			return true if square[0][0] > square[$N-1][$N-1]
-		end
-	end
-
-	return false
-end
-
+#############################################################
 def solve square
-
-	sum = sum_of square
+	current_sum = sum_of square
 
 	if full? square
-		if sum < $SUMTHRESHOLD
-			$SUMTHRESHOLD = sum
-			$SOLUTION = square
+		if current_sum < $MINSUM
+			display square
+			$MINSUM = current_sum
+			$SOL = square
 		end
-		display square
 		return
 	end
 
-	#return if corner_trim? square
-	return if current_sum_trim? square, sum
-	return if sum > $SUMTHRESHOLD
-	valid_list(square).each {|num| solve place_next(square, num)}
+
+	return if current_sum > $MINSUM
+	return if current_sum_trim? square, current_sum
+	return if square[$N*($N-1)]!= 0 && square[$N*($N-1)] < square[$N-1]
+	return if square[$N-1] != 0 && square[$N-1] < square[0]
+
+	valid_nums_in(square).each { |num| solve place num, square }
 end
+#############################################################
 
-def look_up_table max
-
-	table = []
-
-	for y in 0..max
-		row = []
-		for x in 0..max
-			row[x] = divide_equally? x,y
-		end
-
-		table.push row
-	end
-
-	return table
-end
-
-# MAIN
+$ST = Time.now
 $N = ARGV[0].to_i
-$N = 3 if ARGV[0] == nil
-$H = if ARGV[1] == '-h'
-		true
-	else
-		false
-	end
-$THRESHOLD = 2**($N + 3)
-$SUMTHRESHOLD = $THRESHOLD * $N**2 / 2
-$SOLUTION = nil
-$LATTICE = 2..($N**2)
-$DIVEQUAL = look_up_table $THRESHOLD
-solve new_square
+$MAXNUM = 2**($N + 3)
+$MINSUM = $MAXNUM * $N**2 / 2
+$HISET = 2...$MAXNUM
+$LOSET = 2...$N**2
+$SOL = nil
+$DIVEQL = create_div_table
+threads = []
+for i in $HISET
+	threads << Thread.new(i){ |i| 
+
+		a = Array.new($N**2, 0)
+		a[0] = i
+		solve a
+	}
+end
+threads.each { |thread| thread.join }
+display $SOL
