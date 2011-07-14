@@ -65,13 +65,13 @@ def valid_next? square, x, y, i
 
 	# Check Orthogonals
 	if x > 0 && square[y][x-1] != 0
-		return false if $LOOKUP[square[y][x-1]][i] == 0
+		return false if !$DIVEQUAL[square[y][x-1]][i]
 	end
 	#if x < $N - 1 && square[y][x+1] != 0
 	#	return false if !divide_equally? square[y][x+1], i
 	#end
 	if y > 0 && square[y-1][x] != 0
-		return false if $LOOKUP[square[y-1][x]][i] == 0
+		return false if !$DIVEQUAL[square[y-1][x]][i]
 	end
 	#if y < $N - 1 && square[y+1][x] != 0
 	#	return false if !divide_equally? square[y+1][x], i
@@ -79,13 +79,13 @@ def valid_next? square, x, y, i
 
 	# Check Diagonals
 	if x > 0 && y > 0 && square[y-1][x-1] != 0
-		return false if $LOOKUP[square[y-1][x-1]][i] == 1
+		return false if $DIVEQUAL[square[y-1][x-1]][i]
 	end
 	# if x > 0 && y < $N - 1 && square[x-1][y+1] != 0
 	# 	return false if divide_equally? square[x-1][y+1], i
 	# end
 	if x < $N - 1 && y > 0 && square[y-1][x+1] != 0
-		return false if $LOOKUP[square[y-1][x+1]][i] == 1
+		return false if $DIVEQUAL[square[y-1][x+1]][i]
 	end
 	# if x < $N - 1 && y < $N - 1 && square[x+1][y+1] != 0
 	# 	return false if divide_equally? square[x+1][y+1], i
@@ -99,12 +99,11 @@ def valid_list square
 	valid = []
 	x, y = next_spot_in square
 
-	if $H && (x % 2 == 1 && y == 0) || (x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1]))
+	if $H && (x % 2 == 0 && y == 0) || (x > 0 && y > 0 && ($LATTICE.include? square[y-1][x-1]))
 		vals = $LATTICE
 	else
 		vals = 2..$THRESHOLD
 	end
-
 
 	vals.each {|i| valid.push i if valid_next? square, x, y, i}
 	square.flatten.each {|i| valid.delete i}
@@ -115,12 +114,29 @@ def sum_of square
 	return square.flatten.inject {|sum, n| sum + n}
 end
 
-def heuristic_trim? square, sum
+def current_sum_trim? square, sum
 
 	n = $N**2 - (square.flatten.count 0)
 	d = $N**2
 
 	return true if sum > ((n.to_f / d.to_f) * $SUMTHRESHOLD)
+	return false
+end
+
+def corner_trim? square
+
+	if square[0][0] != 0
+		if square[0][$N-1] != 0
+			return true if square[0][0] > square[0][$N-1]
+		end
+		if square[$N-1][0] != 0
+			return true if square[0][$N-1] > square[$N-1][0]
+		end
+		if square[$N-1][$N-1] != 0
+			return true if square[0][0] > square[$N-1][$N-1]
+		end
+	end
+
 	return false
 end
 
@@ -132,13 +148,14 @@ def solve square
 		if sum < $SUMTHRESHOLD
 			$SUMTHRESHOLD = sum
 			$SOLUTION = square
-			display square
 		end
+		display square
 		return
 	end
 
+	#return if corner_trim? square
+	return if current_sum_trim? square, sum
 	return if sum > $SUMTHRESHOLD
-	return if heuristic_trim? square, sum
 	valid_list(square).each {|num| solve place_next(square, num)}
 end
 
@@ -149,11 +166,7 @@ def look_up_table max
 	for y in 0..max
 		row = []
 		for x in 0..max
-			row[x] = if divide_equally? x,y
-						1
-					else
-						0
-					end
+			row[x] = divide_equally? x,y
 		end
 
 		table.push row
@@ -173,6 +186,6 @@ $H = if ARGV[1] == '-h'
 $THRESHOLD = 2**($N + 3)
 $SUMTHRESHOLD = $THRESHOLD * $N**2 / 2
 $SOLUTION = nil
-$LATTICE = 2..($N**2+2)
-$LOOKUP = look_up_table $THRESHOLD
+$LATTICE = 2..($N**2)
+$DIVEQUAL = look_up_table $THRESHOLD
 solve new_square
