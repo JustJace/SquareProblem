@@ -5,11 +5,11 @@ def display square
 	buffer = ''
 	for y in 0...$N
 		for x in 0...$N
-			buffer << "#{square[y*$N + x]} "
+			buffer << "#{square[y*$N + x]}\t"
 		end
 		buffer << "\n"
 	end
-	buffer << "SUM: #{sum_of square} TIME: #{Time.now - $ST}\n"
+	buffer << "SUM: #{sum_of square} TIME: #{Time.now - $ST}\n```````````````````````````````````````\n"
 	puts buffer
 end
 #############################################################
