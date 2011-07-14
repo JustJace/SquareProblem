@@ -2,13 +2,15 @@
 
 #############################################################
 def display square
+	buffer = ''
 	for y in 0...$N
 		for x in 0...$N
-			print "#{square[y*$N + x]} "
+			buffer << "#{square[y*$N + x]} "
 		end
-		puts
+		buffer << "\n"
 	end
-	puts "SUM: #{sum_of square} TIME: #{Time.now - $ST}"
+	buffer << "SUM: #{sum_of square} TIME: #{Time.now - $ST}\n"
+	puts buffer
 end
 #############################################################
 def divide_equally? a, b
@@ -86,7 +88,7 @@ end
 def valid_nums_in square
 	x = next_spot_in square
 	valid = []
-	vals = if (x % 2 == 0 && x / $N == 0) || (x % $N > 0 && x / $N > 0 && ($LOSET.include? square[x-$N-1]))
+	vals = if (x % 2 == ( $N == 3 ? 1 : 0) && x / $N == 0) || (x % $N > 0 && x / $N > 0 && ($LOSET.include? square[x-$N-1]))
 			$LOSET
 		  else
 		  	$HISET
@@ -109,9 +111,9 @@ def solve square
 
 	if full? square
 		if current_sum < $MINSUM
-			display square
 			$MINSUM = current_sum
 			$SOL = square
+			display square
 		end
 		return
 	end
