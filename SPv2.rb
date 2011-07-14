@@ -1,4 +1,4 @@
-#! RUBY SQUARE PROBLEM !#
+# RUBY SQUARE PROBLEM #
 
 #############################################################
 def display square
@@ -64,29 +64,34 @@ def valid_num? square, num, x
 	if x % $N < $N-1 && x / $N > 0 && square[x-$N+1] != 0
 		return false if $DIVEQL[square[x-$N+1]][num]
 	end
-	#RIGHT
-	if x % $N < $N-1 && square[x+1] != 0
-		return false if !$DIVEQL[square[x+1]][num]
-	end
-	#DOWNRIGHT
-	if x / $N < $N-1 && x % $N < $N-1 && square[x+$N+1] != 0
-		return false if $DIVEQL[square[x+$N+1]][num]
-	end
-	#DOWN
-	if x / $N < $N-1 && square[x+$N] != 0
-		return false if !$DIVEQL[square[x+$N]][num]
-	end
-	#DOWNLEFT
-	if x % $N > 0 && x / $N < $N-1 && square[x+$N-1] != 0
-		return false if $DIVEQL[square[x+$N-1]][num]
-	end
+	# #RIGHT
+	# if x % $N < $N-1 && square[x+1] != 0
+	# 	return false if !$DIVEQL[square[x+1]][num]
+	# end
+	# #DOWNRIGHT
+	# if x / $N < $N-1 && x % $N < $N-1 && square[x+$N+1] != 0
+	# 	return false if $DIVEQL[square[x+$N+1]][num]
+	# end
+	# #DOWN
+	# if x / $N < $N-1 && square[x+$N] != 0
+	# 	return false if !$DIVEQL[square[x+$N]][num]
+	# end
+	# #DOWNLEFT
+	# if x % $N > 0 && x / $N < $N-1 && square[x+$N-1] != 0
+	# 	return false if $DIVEQL[square[x+$N-1]][num]
+	# end
 	return true
 end
 #############################################################
 def valid_nums_in square
 	x = next_spot_in square
 	valid = []
-	$HISET.each { |n| valid.push n if valid_num? square, n, x}
+	vals = if (x % 2 == 0 && x / $N == 0) || (x % $N > 0 && x / $N > 0 && ($LOSET.include? square[x-$N-1]))
+			$LOSET
+		  else
+		  	$HISET
+		  end
+	vals.each { |n| valid.push n if valid_num? square, n, x}
 	square.each { |s| valid.delete s }
 	return valid
 end
@@ -129,5 +134,15 @@ $HISET = 2...$MAXNUM
 $LOSET = 2...$N**2
 $SOL = nil
 $DIVEQL = create_div_table
-solve Array.new($N**2, 0)
-puts "END TIME: #{Time.now - $ST}"
+$TLOCK = Mutex.new
+threads = []
+for i in $HISET
+	threads << Thread.new(i){ |i| 
+
+		a = Array.new($N**2, 0)
+		a[0] = i
+		solve a
+	}
+end
+threads.each { |thread| thread.join }
+display $SOL
