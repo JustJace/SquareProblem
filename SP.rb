@@ -2,7 +2,8 @@
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def display square
-	buffer = ''
+	#buffer = "#{Process.pid}:\n"
+	buffer = ""
 	for y in 0...$N
 		for x in 0...$N
 			buffer << "\t#{square[y*$N + x]}"
@@ -44,9 +45,8 @@ def next_spot_in square
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def place num, square
-	x = next_spot_in square
 	copy = square.dup
-	copy[x] = num
+	copy[next_spot_in copy] = num
 	return copy
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -67,40 +67,46 @@ def valid_num? square, num, x
 	if x % $N < $N-1 && x / $N > 0 && square[x-$N+1] != 0
 		return false if $DIVEQL[square[x-$N+1]][num]
 	end
-	# #RIGHT
-	# if x % $N < $N-1 && square[x+1] != 0
-	# 	return false if !$DIVEQL[square[x+1]][num]
-	# end
-	# #DOWNRIGHT
-	# if x / $N < $N-1 && x % $N < $N-1 && square[x+$N+1] != 0
+	##RIGHT
+	#if x % $N < $N-1 && square[x+1] != 0
+	#	return false if !$DIVEQL[square[x+1]][num]
+	#end
+	##DOWNRIGHT
+	#if x / $N < $N-1 && x % $N < $N-1 && square[x+$N+1] != 0
 	# 	return false if $DIVEQL[square[x+$N+1]][num]
-	# end
-	# #DOWN
-	# if x / $N < $N-1 && square[x+$N] != 0
-	# 	return false if !$DIVEQL[square[x+$N]][num]
-	# end
-	# #DOWNLEFT
-	# if x % $N > 0 && x / $N < $N-1 && square[x+$N-1] != 0
-	# 	return false if $DIVEQL[square[x+$N-1]][num]
-	# end
+	#end
+	##DOWN
+	#if x / $N < $N-1 && square[x+$N] != 0
+	#	return false if !$DIVEQL[square[x+$N]][num]
+	#end
+	##DOWNLEFT
+	#if x % $N > 0 && x / $N < $N-1 && square[x+$N-1] != 0
+	#	return false if $DIVEQL[square[x+$N-1]][num]
+	#end
 	return true
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def valid_nums_in square
 	x = next_spot_in square
 	valid = []
-	vals = if (x % 2 == ( $N == 3 ? 1 : 0) && x / $N == 0) || (x % $N > 0 && x / $N > 0 && ($LOSET.include? square[x-$N-1]))
+	vals = if ( x % 2 == ($N==3 ? 1 : 0) && x / $N == 0) || (x % $N > 0 && x / $N > 0 && ($LOSET.include? square[x-$N-1]))
 			$LOSET
-		  else
-		  	$HISET
-		  end
+		else
+			$HISET
+		end
 	vals.each { |n| valid.push n if valid_num? square, n, x}
 	square.each { |s| valid.delete s }
 	return valid
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def current_sum_trim? square, sum
-	n = $N**2 - (square.count 0)
+	
+	count = 0
+	for x in 0...$N**2
+		count += 1 if square[x] == 0
+	end
+
+	n = $N**2 - count
 	d = $N**2
 
 	return true if sum > ((n.to_f / d.to_f) * $MINSUM)
@@ -122,7 +128,6 @@ def solve square
 
 	return if current_sum > $MINSUM
 	return if current_sum_trim? square, current_sum
-	return if square[0] > square[$N**2 - 1]
 	return if square[$N*($N-1)]!= 0 && square[$N*($N-1)] < square[$N-1]
 	return if square[$N-1] != 0 && square[$N-1] < square[0]
 
@@ -138,28 +143,31 @@ $HISET = 2...$MAXNUM
 $LOSET = 2...$N**2
 $SOL = nil
 $DIVEQL = create_div_table
-processorCount = 1
+processorCount = 4
 processes = []
 PID = Process.pid
 for i in 0...processorCount
 	break if Process.pid != PID
 	processes << fork {
 		threads = []
-		for j in (i * $MAXNUM / 4)...((i+1)*$MAXNUM / 4 - 1)
-			threads << Thread.new {
+		numRange = (i*$MAXNUM / processorCount + 2)..((i+1)*$MAXNUM/processorCount + 1)
+		#puts "New Process (#{Process.pid}) Range is: #{numRange}"
+		for j in numRange
+			threads << Thread.new(j) {|threadID|
 				square = Array.new($N**2, 0)
-				square[$N**2 - 1] = j
+				square[0] = threadID
 				solve square
+		#		puts "(#{Process.pid})Thread-#{threadID} completed"
 			}
 		end
 
 		threads.each {|thread| thread.join}
+		#puts "#{Process.pid} completed"
 	}
-
 end
 
 processes.each {|pid| Process.waitpid pid}
 
-puts "Solution for N = #{$N} in #{$HISET}"
-puts
-display $SOL
+#puts "Solution for N = #{$N} in #{$HISET}"
+#puts
+#display $SOL
