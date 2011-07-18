@@ -137,20 +137,25 @@ end
 
 $ST = Time.now
 $N = ARGV[0].to_i
+$CORES = if ARGV[1] != nil
+		ARGV[1].to_i
+	else
+		1
+	end
 $MAXNUM = 2**($N + 3)
 $MINSUM = $MAXNUM * $N**2 / 2
 $HISET = 2...$MAXNUM
 $LOSET = 2...$N**2
 $SOL = nil
 $DIVEQL = create_div_table
-processorCount = 4
-processes = []
 PID = Process.pid
-for i in 0...processorCount
+
+processes = []
+for i in 0...$CORES
 	break if Process.pid != PID
 	processes << fork {
 		threads = []
-		numRange = (i*$MAXNUM / processorCount + 2)..((i+1)*$MAXNUM/processorCount + 1)
+		numRange = (i*$MAXNUM / $CORES + 2)..((i+1)*$MAXNUM/$CORES + 1)
 		#puts "New Process (#{Process.pid}) Range is: #{numRange}"
 		for j in numRange
 			threads << Thread.new(j) {|threadID|
@@ -167,6 +172,8 @@ for i in 0...processorCount
 end
 
 processes.each {|pid| Process.waitpid pid}
+
+puts "END TIME: #{Time.now - $ST}"
 
 #puts "Solution for N = #{$N} in #{$HISET}"
 #puts
