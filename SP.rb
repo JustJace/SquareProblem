@@ -15,6 +15,10 @@ def display square
 	puts buffer
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+def write string
+	puts "(#{Time.now - $ST})[#{Process.pid}]: " << string
+end
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def divide_equally? a, b
 	return false if a == 0 || b == 0
 	return a % b == 0 || b % a == 0
@@ -22,9 +26,9 @@ end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def create_div_table
 	table = []
-	for y in 0...$MAXNUM
+	for y in 0..$MAXNUM
 		row = []
-		for x in 0...$MAXNUM
+		for x in 0..$MAXNUM
 			row.push divide_equally? x,y
 		end
 		table.push row
@@ -108,8 +112,9 @@ def current_sum_trim? square, sum
 
 	n = $N**2 - count
 	d = $N**2
-
-	return true if sum > ((n.to_f / d.to_f) * $MINSUM)
+	nod = n.to_f / d.to_f
+	return false if nod < 0.25
+	return true if sum > $MINSUM * nod
 	return false
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -126,10 +131,22 @@ def solve square
 	end
 
 
-	return if current_sum > $MINSUM
-	return if current_sum_trim? square, current_sum
-	return if square[$N*($N-1)]!= 0 && square[$N*($N-1)] < square[$N-1]
-	return if square[$N-1] != 0 && square[$N-1] < square[0]
+	if current_sum > $MINSUM
+		@TrimCount += 1
+		return
+	end
+	if current_sum_trim? square, current_sum
+		@TrimCount += 1
+		return
+	end
+	if square[$N*($N-1)]!= 0 && square[$N*($N-1)] < square[$N-1]
+		@TrimCount += 1
+		return
+	end
+	if square[$N-1] != 0 && square[$N-1] < square[0]
+		@TrimCount += 1
+		return
+	end
 
 	valid_nums_in(square).each { |num| solve place num, square }
 end
@@ -154,20 +171,24 @@ processes = []
 for i in 0...$CORES
 	break if Process.pid != PID
 	processes << fork {
+		@TrimCount = 0
 		threads = []
-		numRange = (i*$MAXNUM / $CORES + 2)..((i+1)*$MAXNUM/$CORES + 1)
-		#puts "New Process (#{Process.pid}) Range is: #{numRange}"
+		numRange = (i*$MAXNUM / $CORES + 1)..((i+1)*$MAXNUM/$CORES)
+		#@threadsLeft = numRange.to_a
+		write "New Process Range is: #{numRange}"
 		for j in numRange
+			next if j == 1
 			threads << Thread.new(j) {|threadID|
 				square = Array.new($N**2, 0)
 				square[0] = threadID
 				solve square
-		#		puts "(#{Process.pid})Thread-#{threadID} completed"
+				#@threadsLeft.delete threadID
+				#write "Threads Left: #{@threadsLeft.length}"
 			}
 		end
 
 		threads.each {|thread| thread.join}
-		#puts "#{Process.pid} completed"
+		write "[#{Process.pid}] complete; trimmed #{@TrimCount} nodes"
 	}
 end
 
