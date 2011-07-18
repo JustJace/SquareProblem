@@ -9,7 +9,8 @@ def display square
 		end
 		buffer << "\n"
 	end
-	buffer << "\nSUM: #{sum_of square} TIME: #{Time.now - $ST}\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+	buffer << "\nSUM: #{sum_of square} TIME: #{Time.now - $ST}\n"
+	buffer << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
 	puts buffer
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -121,6 +122,7 @@ def solve square
 
 	return if current_sum > $MINSUM
 	return if current_sum_trim? square, current_sum
+	return if square[0] > square[$N**2 - 1]
 	return if square[$N*($N-1)]!= 0 && square[$N*($N-1)] < square[$N-1]
 	return if square[$N-1] != 0 && square[$N-1] < square[0]
 
@@ -136,16 +138,28 @@ $HISET = 2...$MAXNUM
 $LOSET = 2...$N**2
 $SOL = nil
 $DIVEQL = create_div_table
-threads = []
-for i in $HISET
-	threads << Thread.new(i){ |i| 
+processorCount = 1
+processes = []
+PID = Process.pid
+for i in 0...processorCount
+	break if Process.pid != PID
+	processes << fork {
+		threads = []
+		for j in (i * $MAXNUM / 4)...((i+1)*$MAXNUM / 4 - 1)
+			threads << Thread.new {
+				square = Array.new($N**2, 0)
+				square[$N**2 - 1] = j
+				solve square
+			}
+		end
 
-		a = Array.new($N**2, 0)
-		a[0] = i
-		solve a
+		threads.each {|thread| thread.join}
 	}
+
 end
-threads.each { |thread| thread.join }
+
+processes.each {|pid| Process.waitpid pid}
+
 puts "Solution for N = #{$N} in #{$HISET}"
 puts
 display $SOL
