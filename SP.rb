@@ -9,7 +9,8 @@ def display square
 		end
 		buffer << "\n"
 	end
-	buffer << "\nSUM: #{sum_of square} TIME: #{Time.now - $ST}\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+	buffer << "\nSUM: #{sum_of square} TIME: #{Time.now - $ST}\n"
+	buffer << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
 	puts buffer
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -43,9 +44,8 @@ def next_spot_in square
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def place num, square
-	x = next_spot_in square
 	copy = square.dup
-	copy[x] = num
+	copy[next_spot_in copy] = num
 	return copy
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -99,7 +99,13 @@ def valid_nums_in square
 end
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def current_sum_trim? square, sum
-	n = $N**2 - (square.count 0)
+	
+	count = 0
+	for x in 0...$N**2
+		count += 1 if square[x] == 0
+	end
+
+	n = $N**2 - count
 	d = $N**2
 
 	return true if sum > ((n.to_f / d.to_f) * $MINSUM)
