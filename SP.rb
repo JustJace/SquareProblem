@@ -176,6 +176,7 @@ def look_up_table max
 end
 
 # MAIN
+$ST = Time.now
 $N = ARGV[0].to_i
 $N = 3 if ARGV[0] == nil
 $H = if ARGV[1] == '-h'
@@ -189,3 +190,4 @@ $SOLUTION = nil
 $LATTICE = 2..($N**2)
 $DIVEQUAL = look_up_table $THRESHOLD
 solve new_square
+puts "END TIME: #{Time.now - $ST}"
